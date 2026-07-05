@@ -12,6 +12,12 @@ function sanitizeEmail(value) {
   return value.trim().toLowerCase();
 }
 
+function getErrorMessage(error) {
+  if (error instanceof Error && error.message) return error.message;
+  if (typeof error === 'string' && error.trim()) return error;
+  return 'Your inquiry could not be delivered. Please try again later.';
+}
+
 function validatePayload(payload) {
   if (!payload || typeof payload !== 'object' || Array.isArray(payload)) {
     return { valid: false, message: 'Invalid form payload.' };
@@ -59,9 +65,9 @@ export default async function handler(req, res) {
   const contactEmail = process.env.CONTACT_EMAIL;
   const fromEmail = process.env.RESEND_FROM_EMAIL || 'no-reply@kyoorhomoeo.com';
 
-  if (!apiKey || !contactEmail) {
+  if (!apiKey || !contactEmail || !fromEmail) {
     return res.status(500).json({
-      message: 'Email delivery is not configured. Add RESEND_API_KEY and CONTACT_EMAIL in your environment variables.',
+      message: 'Email delivery is not configured. Add RESEND_API_KEY, CONTACT_EMAIL, and RESEND_FROM_EMAIL in your environment variables.',
     });
   }
 
@@ -95,9 +101,12 @@ export default async function handler(req, res) {
 
     return res.status(200).json({ message: 'Your inquiry was sent successfully.' });
   } catch (error) {
+    const message = getErrorMessage(error);
     console.error('Contact email failed:', error);
     return res.status(500).json({
-      message: 'Your inquiry could not be delivered. Please try again later.',
+      message: message.includes('verified')
+        ? `Resend rejected the sender address: ${message}`
+        : 'Your inquiry could not be delivered. Please verify your Resend configuration and sender address.',
     });
   }
 }

@@ -58,10 +58,22 @@ export default function WorkView({ isDarkMode }: WorkViewProps) {
         }),
       });
 
-      const data = await response.json().catch(() => ({}));
+      let data: { message?: string } = {};
+      const responseText = await response.text();
+
+      if (responseText) {
+        try {
+          data = JSON.parse(responseText) as { message?: string };
+        } catch {
+          data = {};
+        }
+      }
 
       if (!response.ok) {
-        throw new Error(data.message || 'Unable to send your inquiry right now. Please try again.');
+        const fallbackMessage = response.status === 404
+          ? 'The contact endpoint could not be reached. Please ensure the deployment includes the API route.'
+          : 'Unable to send your inquiry right now. Please try again.';
+        throw new Error(data.message || responseText || fallbackMessage);
       }
 
       setIsSuccess(true);
