@@ -12,6 +12,7 @@ export default function ConnectView({ isDarkMode }: ConnectViewProps) {
   const [copied, setCopied] = useState(false);
   const [downloaded, setDownloaded] = useState(false);
   const [timeStr, setTimeStr] = useState('');
+  const resumePdfPath = '/Resume%20of%20Mrunali%20Kale.pdf';
 
   // Live local UTC time clock updater
   useEffect(() => {
@@ -36,7 +37,7 @@ export default function ConnectView({ isDarkMode }: ConnectViewProps) {
     
     // Download the actual resume PDF file
     const link = document.createElement('a');
-    link.href = '/Resume of Mrunali Kale.pdf';
+    link.href = resumePdfPath;
     link.setAttribute('download', 'Resume of Mrunali Kale.pdf');
     document.body.appendChild(link);
     link.click();
