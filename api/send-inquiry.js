@@ -1,4 +1,6 @@
-import nodemailer from 'nodemailer';
+import { Resend } from 'resend';
+
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -26,29 +28,20 @@ export default async function handler(req, res) {
     return res.status(400).json({ message: 'Name, email, and project description are required.' });
   }
 
-  const smtpUser = process.env.SMTP_USER;
-  const smtpPass = process.env.SMTP_PASS;
+  const apiKey = process.env.RESEND_API_KEY;
+  const fromEmail = process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev';
+  const toEmail = process.env.INQUIRY_TO_EMAIL || 'mrunalipradeepkale@gmail.com';
 
-  if (!smtpUser || !smtpPass) {
+  if (!apiKey) {
     return res.status(500).json({
-      message: 'Email delivery is not configured yet. Please set SMTP_USER and SMTP_PASS in the deployment environment.',
+      message: 'Email delivery is not configured yet. Please set the RESEND_API_KEY environment variable in Vercel.',
     });
   }
 
-  const transporter = nodemailer.createTransport({
-    host: process.env.SMTP_HOST || 'smtp.gmail.com',
-    port: Number(process.env.SMTP_PORT || 465),
-    secure: true,
-    auth: {
-      user: smtpUser,
-      pass: smtpPass,
-    },
-  });
-
   try {
-    await transporter.sendMail({
-      from: process.env.SMTP_FROM || smtpUser,
-      to: process.env.INQUIRY_TO_EMAIL || 'mrunalipradeepkale@gmail.com',
+    const result = await resend.emails.send({
+      from: fromEmail,
+      to: [toEmail],
       subject: `New collaboration inquiry from ${name}`,
       html: `
         <h2>New collaboration inquiry</h2>
@@ -70,11 +63,15 @@ export default async function handler(req, res) {
       `,
     });
 
+    if (result.error) {
+      throw new Error(result.error.message);
+    }
+
     return res.status(200).json({ message: 'Inquiry sent successfully.' });
   } catch (error) {
     console.error('Inquiry email failed:', error);
     return res.status(500).json({
-      message: 'Your inquiry could not be delivered. Please verify the mail server configuration.',
+      message: 'Your inquiry could not be delivered. Please verify the email service configuration.',
     });
   }
 }
