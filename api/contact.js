@@ -57,7 +57,7 @@ export default async function handler(req, res) {
   const { data } = validation;
   const apiKey = process.env.RESEND_API_KEY;
   const contactEmail = process.env.CONTACT_EMAIL;
-  const fromEmail = process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev';
+  const fromEmail = process.env.RESEND_FROM_EMAIL || 'no-reply@kyoorhomoeo.com';
 
   if (!apiKey || !contactEmail) {
     return res.status(500).json({
