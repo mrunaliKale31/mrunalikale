@@ -1,7 +1,5 @@
 import { Resend } from 'resend';
 
-const resend = new Resend(process.env.RESEND_API_KEY);
-
 function sanitizeText(value) {
   if (typeof value !== 'string') return '';
   return value.replace(/</g, '&lt;').replace(/>/g, '&gt;').trim();
@@ -70,6 +68,8 @@ export default async function handler(req, res) {
       message: 'Email delivery is not configured. Add RESEND_API_KEY, CONTACT_EMAIL, and RESEND_FROM_EMAIL in your environment variables.',
     });
   }
+
+  const resend = new Resend(apiKey);
 
   const emailBody = [
     '----------------------------------------',
