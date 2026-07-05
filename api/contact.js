@@ -59,13 +59,13 @@ export default async function handler(req, res) {
   }
 
   const { data } = validation;
-  const apiKey = process.env.RESEND_API_KEY;
+  const apiKey = process.env.RESEND_API_KEY || process.env.mail_MKportfolio;
   const contactEmail = process.env.CONTACT_EMAIL;
-  const fromEmail = process.env.RESEND_FROM_EMAIL || 'no-reply@kyoorhomoeo.com';
+  const fromEmail = process.env.RESEND_FROM_EMAIL || process.env.CONTACT_EMAIL || 'no-reply@kyoorhomoeo.com';
 
   if (!apiKey || !contactEmail || !fromEmail) {
     return res.status(500).json({
-      message: 'Email delivery is not configured. Add RESEND_API_KEY, CONTACT_EMAIL, and RESEND_FROM_EMAIL in your environment variables.',
+      message: 'Email delivery is not configured. Add RESEND_API_KEY (or your existing mail_MKportfolio secret), CONTACT_EMAIL, and RESEND_FROM_EMAIL in your environment variables.',
     });
   }
 
