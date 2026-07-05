@@ -3,6 +3,7 @@ import {
   Github, Linkedin, Mail, MapPin, 
   Clock, Download, Copy, Check 
 } from 'lucide-react';
+import profileImage from '../../mrunali kale.jpeg';
 
 interface ConnectViewProps {
   isDarkMode: boolean;
@@ -150,7 +151,7 @@ export default function ConnectView({ isDarkMode }: ConnectViewProps) {
           isDarkMode ? 'bg-[#0b0b0b] border-zinc-900' : 'bg-zinc-50/50 border-zinc-200'
         }`}>
           <img 
-            src="/mrunali kale.jpeg" 
+            src={profileImage} 
             alt="Mrunali Kale" 
             className="w-full h-full object-cover aspect-square"
           />
