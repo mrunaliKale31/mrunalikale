@@ -30,17 +30,45 @@ export default function WorkView({ isDarkMode }: WorkViewProps) {
   });
 
   const [isSuccess, setIsSuccess] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState('');
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
-  const handleNextStep = () => {
+  const handleNextStep = async () => {
     if (step < totalSteps) {
       setStep(prev => prev + 1);
-    } else {
-      // Final Submit
+      return;
+    }
+
+    setIsSubmitting(true);
+    setSubmitError('');
+
+    try {
+      const response = await fetch('/api/send-inquiry', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          ...formData,
+          submittedAt: new Date().toISOString(),
+        }),
+      });
+
+      const data = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Unable to send your inquiry right now. Please try again.');
+      }
+
       setIsSuccess(true);
+    } catch (error) {
+      setSubmitError(error instanceof Error ? error.message : 'Unable to send your inquiry right now. Please try again.');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -176,12 +204,12 @@ export default function WorkView({ isDarkMode }: WorkViewProps) {
                 <div className="space-y-2">
                   <h4 className={`text-sm font-semibold transition-colors ${isDarkMode ? 'text-white' : 'text-zinc-900'}`}>Inquiry Successfully Queued</h4>
                   <p className={`text-xs max-w-md mx-auto leading-relaxed transition-colors ${isDarkMode ? 'text-zinc-400' : 'text-zinc-650'}`}>
-                    Thank you, <span className={`font-semibold ${isDarkMode ? 'text-white' : 'text-zinc-950'}`}>{formData.name}</span>! Your detailed project parameters have been securely stored. I am analyzing the scope and will reach out to you via <span className={`font-semibold ${isDarkMode ? 'text-white' : 'text-zinc-950'}`}>{formData.email}</span> within 24 business hours to set up our collaboration session.
+                    Thank you, <span className={`font-semibold ${isDarkMode ? 'text-white' : 'text-zinc-950'}`}>{formData.name}</span>! Your inquiry has been sent to my inbox and I will follow up via <span className={`font-semibold ${isDarkMode ? 'text-white' : 'text-zinc-950'}`}>{formData.email}</span> within 24 business hours to set up our collaboration session.
                   </p>
                 </div>
                 <div className="pt-2">
                   <button
-                    onClick={() => { setIsSuccess(false); setStep(1); setFormData(prev => ({ ...prev, name: '', email: '', description: '', fileName: '' })); }}
+                    onClick={() => { setIsSuccess(false); setSubmitError(''); setStep(1); setFormData(prev => ({ ...prev, name: '', email: '', description: '', fileName: '' })); }}
                     className={`px-4 py-2 border rounded-lg text-xs font-semibold cursor-pointer transition-colors ${
                       isDarkMode 
                         ? 'bg-zinc-900 hover:bg-zinc-850 text-white border-zinc-800' 
@@ -505,19 +533,24 @@ export default function WorkView({ isDarkMode }: WorkViewProps) {
                     <span>Previous Step</span>
                   </button>
 
-                  <button
-                    type="button"
-                    onClick={handleNextStep}
-                    disabled={step === 1 && (!formData.name || !formData.email)}
-                    className={`flex items-center gap-1.5 font-semibold py-2 px-5 rounded shadow-xs transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed ${
-                      isDarkMode 
-                        ? 'bg-white text-zinc-950 hover:bg-zinc-100' 
-                        : 'bg-zinc-950 text-white hover:bg-zinc-850'
-                    }`}
-                  >
-                    <span>{step === totalSteps ? 'Compile & Submit Parameters' : 'Advance Scope'}</span>
-                    <ArrowRight className="w-4 h-4" />
-                  </button>
+                  <div className="space-y-2 text-right">
+                    {submitError && (
+                      <p className="text-[10px] text-rose-500">{submitError}</p>
+                    )}
+                    <button
+                      type="button"
+                      onClick={handleNextStep}
+                      disabled={isSubmitting || (step === 1 && (!formData.name || !formData.email))}
+                      className={`flex items-center gap-1.5 font-semibold py-2 px-5 rounded shadow-xs transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed ${
+                        isDarkMode 
+                          ? 'bg-white text-zinc-950 hover:bg-zinc-100' 
+                          : 'bg-zinc-950 text-white hover:bg-zinc-850'
+                      }`}
+                    >
+                      <span>{isSubmitting ? 'Sending Inquiry...' : step === totalSteps ? 'Compile & Submit Parameters' : 'Advance Scope'}</span>
+                      {!isSubmitting && <ArrowRight className="w-4 h-4" />}
+                    </button>
+                  </div>
                 </div>
 
               </div>
